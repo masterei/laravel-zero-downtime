@@ -1,0 +1,93 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_NAME: lorem-ipsum
+
+    concurrency:
+      group: production
+      cancel-in-progress: true
+
+    x-ssh-config: &ssh-config
+      host: ${{ secrets.REMOTE_HOST }}
+      username: ${{ secrets.REMOTE_USER }}
+      key: ${{ secrets.SSH_PRIVATE_KEY }}
+      fingerprint: ${{ secrets.REMOTE_FINGERPRINT }}
+      passphrase: ${{ secrets.SSH_PASSPHRASE }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          coverage: none
+
+      - name: Install Dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --optimize-autoloader \
+            --ignore-platform-reqs
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Remove Unnecessary Files
+        run: |
+          rm -rf .git
+          rm -rf tests
+          rm -rf node_modules
+
+      - name: Generate Deployment Variables
+        run: |
+          RELEASE_NAME="$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
+          ARTIFACT_NAME="${APP_NAME}-${RELEASE_NAME}.tar.gz"
+          ARTIFACT_UPLOAD_PATH="/tmp/$ARTIFACT_NAME"
+
+          echo "RELEASE_NAME=$RELEASE_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_UPLOAD_PATH=$ARTIFACT_UPLOAD_PATH" >> "$GITHUB_ENV"
+
+      - name: Create Archive
+        run: |
+          tar \
+            --exclude=storage \
+            -czf "$ARTIFACT_NAME" .
+
+      - name: Upload Archive
+        uses: appleboy/scp-action@v1
+        with:
+          <<: *ssh-config
+          source: "${{ env.ARTIFACT_NAME }}"
+          target: /tmp
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          <<: *ssh-config
+          script: |
+            /opt/laravel-zero-downtime/deploy.sh \
+                  "${{ env.APP_NAME }}" \
+                  "${{ env.RELEASE_NAME }}" \
+                  "/tmp/${{ env.ARTIFACT_UPLOAD_PATH }}"
