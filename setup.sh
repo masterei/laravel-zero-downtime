@@ -65,12 +65,13 @@ validate_php_version() {
 create_directory_structure() {
     log "📁 Creating directory structure..."
 
-    mkdir -p "$RELEASES"
-    mkdir -p "$SHARED/storage"
-
     if ! id "$APP_OWNER" >/dev/null 2>&1; then
         fail "Application owner '$APP_OWNER' does not exist."
     fi
+
+    mkdir -p \
+        "$RELEASES" \
+        "$SHARED/storage"
 
     chown -R "$APP_OWNER:$APP_OWNER" "$BASE"
 
