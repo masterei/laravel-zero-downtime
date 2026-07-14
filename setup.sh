@@ -81,6 +81,8 @@ initialize_shared_resources() {
     log "📄 Preparing shared resources..."
 
     touch "$SHARED/.env"
+
+    chown "$APP_OWNER:$APP_OWNER" "$SHARED/.env"
     chmod 640 "$SHARED/.env"
 
     log_done "📄 Shared resources initialized."
