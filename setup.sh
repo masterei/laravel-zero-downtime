@@ -3,7 +3,6 @@
 set -Eeuo pipefail
 
 readonly APP_NAME="${1:?Usage: ./setup.sh <app-name>}"
-readonly APP_OWNER="${2:?Usage: ./setup.sh <app-name> <owner>}"
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
