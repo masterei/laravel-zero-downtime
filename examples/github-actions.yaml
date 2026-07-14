@@ -10,22 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      APP_NAME: lorem-ipsum
+      APP_NAME: my-app
 
     concurrency:
       group: production
       cancel-in-progress: true
 
-    x-ssh-config: &ssh-config
-      host: ${{ secrets.REMOTE_HOST }}
-      username: ${{ secrets.REMOTE_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      fingerprint: ${{ secrets.REMOTE_FINGERPRINT }}
-      passphrase: ${{ secrets.SSH_PASSPHRASE }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -42,7 +35,7 @@ jobs:
             --ignore-platform-reqs
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -52,12 +45,6 @@ jobs:
 
       - name: Build Assets
         run: npm run build
-
-      - name: Remove Unnecessary Files
-        run: |
-          rm -rf .git
-          rm -rf tests
-          rm -rf node_modules
 
       - name: Generate Deployment Variables
         run: |
@@ -71,23 +58,41 @@ jobs:
 
       - name: Create Archive
         run: |
+          shopt -s dotglob
+
           tar \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=tests \
+            --exclude=node_modules \
             --exclude=storage \
-            -czf "$ARTIFACT_NAME" .
+            --exclude="$ARTIFACT_NAME" \
+            -czf "$ARTIFACT_NAME" \
+            *
+
+          shopt -u dotglob
 
       - name: Upload Archive
-        uses: appleboy/scp-action@v1
+        uses: appleboy/scp-action@v1.0.0
         with:
-          <<: *ssh-config
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.REMOTE_FINGERPRINT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "${{ env.ARTIFACT_NAME }}"
           target: /tmp
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.2.2
         with:
-          <<: *ssh-config
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.REMOTE_FINGERPRINT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             /opt/laravel-zero-downtime/deploy.sh \
-                  "${{ env.APP_NAME }}" \
-                  "${{ env.RELEASE_NAME }}" \
-                  "/tmp/${{ env.ARTIFACT_UPLOAD_PATH }}"
+              "${{ env.APP_NAME }}" \
+              "${{ env.RELEASE_NAME }}" \
+              "${{ env.ARTIFACT_UPLOAD_PATH }}"
