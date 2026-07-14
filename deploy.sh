@@ -78,8 +78,8 @@ extract_artifact() {
 configure_cache_permissions() {
     log "🔐 Configuring cache permissions..."
 
-    setfacl -R -m "u:$RUNTIME_USER:rx" "$RELEASE_PATH/bootstrap/cache"
-    setfacl -R -m "d:u:$RUNTIME_USER:rx" "$RELEASE_PATH/bootstrap/cache"
+    setfacl -Rm "u:$RUNTIME_USER:rwX,u:$APP_OWNER:rwX" "$RELEASE_PATH/bootstrap/cache"
+    setfacl -Rdm "u:$RUNTIME_USER:rwx,u:$APP_OWNER:rwx" "$RELEASE_PATH/bootstrap/cache"
 
     log_done "🔐 Cache permissions configured."
 }

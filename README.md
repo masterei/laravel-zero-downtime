@@ -12,9 +12,9 @@ cd laravel-zero-downtime
 
 cp config.example.sh config.sh
 
-# Edit config.sh
+# Configure APP_OWNER, RUNTIME_USER, etc.
 
-sudo ./setup.sh my-app deploy
+sudo ./setup.sh my-app
 
 # Populate shared/.env and shared/storage
 
@@ -28,7 +28,7 @@ sudo ./setup.sh my-app deploy
 
 - Atomic deployments using symlinks
 - Immutable release directories
-- Simple rollback to any previous release
+- Interactive rollback to any previous release
 - Shared persistent resources (`.env` and `storage`)
 - Application-specific deployment hooks
 - Automatic cleanup of old releases
@@ -89,7 +89,7 @@ The deployment framework itself lives separately:
 
 - Linux
 - Bash 4+
-- PHP (default: **8.2**, configurable in `config.sh`)
+- PHP (minimum version configurable in `config.sh`)
 - ACL utilities (`setfacl`, `getfacl`)
 
 > **Note**
@@ -119,6 +119,7 @@ Edit `config.sh` to match your server environment.
 | `DEPLOY_VERSION`   | Deployment framework version.                                                            | `1.0.0`    |
 | `RELEASES_TO_KEEP` | Number of previous releases to retain after each deployment.                             | `5`        |
 | `PHP_VERSION`      | Minimum supported PHP version required by `setup.sh`.                                    | `8.2`      |
+| `APP_OWNER`        | Linux user that owns the application files and executes deployments.                     | `deploy`   |
 | `RUNTIME_USER`     | Linux user used by your web server to execute the application (for example, `www-data`). | `www-data` |
 
 Application paths are derived automatically:
@@ -136,29 +137,35 @@ CURRENT=$BASE/current
 
 # Initial Server Setup
 
+Before running the setup script, edit `config.sh` and configure the deployment settings.
+
+```bash
+APP_OWNER="deploy"
+```
+
+> **Note**
+>
+> `APP_OWNER` is the Linux user that owns the application files and executes deployments.
+> This is **not** the web server runtime user (for example, `www-data`).
+>
+> A common configuration is:
+>
+> - **Application owner:** `deploy`
+> - **Runtime user:** `www-data`
+>
+> The application owner performs deployments, while the runtime user is used by the web server to execute the application.
+
 Initialize the application directory.
 
 ```bash
-sudo ./setup.sh <app-name> <owner>
+sudo ./setup.sh <app-name>
 ```
 
 Example:
 
 ```bash
-sudo ./setup.sh my-app deploy
+sudo ./setup.sh my-app
 ```
-
-> **Note**
->
-> `<owner>` is the Linux user that owns the application files and executes deployments.
-> This is **not** the web server user (for example, `www-data`).
->
-> A common setup is:
->
-> - **Owner:** `deploy`
-> - **Runtime user:** `www-data`
->
-> The application owner manages deployments, while the runtime user is used by your web server to execute the application.
 
 This command:
 
@@ -190,7 +197,6 @@ Typical contents:
 - `vendor/`
 - Built frontend assets
 - `.deploy/`
-- Any generated production files
 
 The artifact should not include environment-specific files such as:
 
@@ -229,7 +235,7 @@ CI/CD
  └── Execute deploy.sh
           │
           ▼
-Validate Artifact
+Validate
       │
 Extract Release
       │
@@ -380,7 +386,7 @@ The workflow demonstrates how to:
 | `setup.sh`    | Initializes an application on the server. |
 | `deploy.sh`   | Deploys a new application release.        |
 | `rollback.sh` | Activates a previous release.             |
-| `common.sh`   | Shared helper functions.                  |
+| `common.sh`   | Shared utility functions.                  |
 | `config.sh`   | Framework configuration.                  |
 
 # License

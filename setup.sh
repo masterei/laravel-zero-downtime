@@ -90,8 +90,8 @@ initialize_shared_resources() {
 configure_permissions() {
     log "🔐 Configuring storage permissions..."
 
-    setfacl -R -m "u:$RUNTIME_USER:rwx" "$SHARED/storage"
-    setfacl -R -m "d:u:$RUNTIME_USER:rwx" "$SHARED/storage"
+    setfacl -Rm "u:$RUNTIME_USER:rwX,u:$APP_OWNER:rwX" "$SHARED/storage"
+    setfacl -Rdm "u:$RUNTIME_USER:rwx,u:$APP_OWNER:rwx" "$SHARED/storage"
 
     log_done "🔐 Storage permissions configured."
 }
