@@ -5,7 +5,7 @@ log() {
 }
 
 log_done() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [Done ] $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [Done] $1"
 }
 
 fail() {
