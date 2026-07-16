@@ -15,7 +15,7 @@ fi
 main() {
     select_release
 
-    log "↩️ Starting rollback (Framework v$DEPLOY_VERSION)..."
+    log "↩️ Starting rollback (Framework v$FRAMEWORK_VERSION)..."
 
     run_rollback_script
     activate_release

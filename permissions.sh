@@ -13,7 +13,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 main() {
-    log "🔐 Repairing shared resource permissions (Framework v$DEPLOY_VERSION)..."
+    log "🔐 Repairing shared resource permissions (Framework v$FRAMEWORK_VERSION)..."
 
     validate_environment
     repair_env_permissions

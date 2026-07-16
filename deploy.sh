@@ -17,7 +17,7 @@ fi
 readonly RELEASE_PATH="$RELEASES/$RELEASE_NAME"
 
 main() {
-    log "🚀 Starting deployment (Framework v$DEPLOY_VERSION)..."
+    log "🚀 Starting deployment (Framework v$FRAMEWORK_VERSION)..."
 
     ensure_artifact_exists
     ensure_app_dependencies

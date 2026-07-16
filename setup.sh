@@ -13,10 +13,9 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 main() {
-    log "🚀 Initializing application (Framework v$DEPLOY_VERSION)..."
+    log "🚀 Initializing application (Framework v$FRAMEWORK_VERSION)..."
 
     validate_environment
-    validate_php_version
     create_directory_structure
     initialize_shared_resources
     configure_permissions
@@ -43,21 +42,6 @@ validate_environment() {
     done
 
     log_done "🔍 Environment validated."
-}
-
-validate_php_version() {
-    log "🐘 Validating PHP version..."
-
-    local required="$PHP_VERSION"
-    local current
-
-    current=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
-
-    if [[ "$(printf '%s\n%s\n' "$required" "$current" | sort -V | head -n1)" != "$required" ]]; then
-        fail "PHP $required or later is required. Current version: $current."
-    fi
-
-    log_done "🐘 PHP $current verified."
 }
 
 create_directory_structure() {

@@ -53,7 +53,7 @@ The framework is intentionally opinionated and emphasizes:
 
 Before using the deployment framework, ensure that:
 
-- PHP is installed.
+- PHP CLI is installed.
 - Your web server is configured.
 - An application owner exists (for example, `deploy`).
 - The runtime user exists (for example, `www-data`).
@@ -83,6 +83,7 @@ The deployment framework itself lives separately:
 ├── config.example.sh
 ├── config.sh
 ├── deploy.sh
+├── permissions.sh
 ├── rollback.sh
 └── setup.sh
 ```
@@ -91,12 +92,8 @@ The deployment framework itself lives separately:
 
 - Linux
 - Bash 4+
-- PHP (minimum version configurable in `config.sh`)
+- PHP CLI
 - ACL utilities (`setfacl`, `getfacl`)
-
-> **Note**
->
-> The framework validates the PHP version during `setup.sh`. The minimum supported version is configurable through `config.sh` and defaults to PHP 8.2.
 
 # Installation
 
@@ -121,25 +118,14 @@ Edit `config.sh` to match your server environment.
 | `APP_OWNER`        | Linux user that owns the application files and executes deployments.                     | `deploy`   |
 | `RUNTIME_USER`     | Linux user used by your web server to execute the application (for example, `www-data`). | `www-data` |
 | `RELEASES_TO_KEEP` | Number of previous releases to retain after each deployment.                             | `5`        |
-| `PHP_VERSION`      | Minimum supported PHP version required by `setup.sh`.                                    | `8.2`      |
-| `DEPLOY_VERSION`   | Deployment framework version.                                                            | `1.0.0`    |
-
-Application paths are derived automatically:
-
-```text
-BASE=/var/www/<app-name>
-RELEASES=$BASE/releases
-SHARED=$BASE/shared
-CURRENT=$BASE/current
-```
 
 > **Note**
 >
-> `APP_NAME` is provided when running `setup.sh`, `deploy.sh`, and `rollback.sh`. The framework derives all application paths automatically from this value.
+> `APP_NAME` is provided when running `setup.sh`, `permissions.sh`, `deploy.sh`, and `rollback.sh`. The framework derives all application paths automatically from this value.
 
 # Initial Server Setup
 
-Before running the setup script, edit `config.sh` and configure the deployment settings.
+Before running the setup script, edit `config.sh` to match your server environment.
 
 ```bash
 APP_OWNER="deploy"
@@ -210,7 +196,7 @@ This command:
 
 > **Note**
 >
-> This command is safe to run multiple times and is intended for use after populating or restoring shared resources.
+> This command is safe to run multiple times. It may be used after migrating or restoring shared resources, or whenever shared resource permissions need to be repaired.
 
 # Release Artifact
 

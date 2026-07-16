@@ -1,35 +1,10 @@
 #!/usr/bin/env bash
 
-# -----------------------------------------------------------------------------
-# Runtime
-# -----------------------------------------------------------------------------
-
+# Linux user that owns the application files and executes deployments.
 readonly APP_OWNER="deploy"
+
+# Linux user used by the web server to execute the application.
 readonly RUNTIME_USER="www-data"
 
-# -----------------------------------------------------------------------------
-# Deployment
-# -----------------------------------------------------------------------------
-
+# Number of previous releases to retain after each deployment.
 readonly RELEASES_TO_KEEP=5
-
-# -----------------------------------------------------------------------------
-# Requirements
-# -----------------------------------------------------------------------------
-
-readonly PHP_VERSION="8.2"
-
-# -----------------------------------------------------------------------------
-# Framework (Do not modify)
-# -----------------------------------------------------------------------------
-
-readonly DEPLOY_VERSION="1.1.0"
-
-# -----------------------------------------------------------------------------
-# Derived Paths (Do not modify)
-# -----------------------------------------------------------------------------
-
-readonly BASE="/var/www/$APP_NAME"
-readonly RELEASES="$BASE/releases"
-readonly SHARED="$BASE/shared"
-readonly CURRENT="$BASE/current"
