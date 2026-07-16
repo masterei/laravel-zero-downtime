@@ -3,8 +3,8 @@
 set -Eeuo pipefail
 
 readonly APP_NAME="${1:?Usage: ./rollback.sh <app-name>}"
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 source "$SCRIPT_DIR/config.sh"
 
@@ -15,7 +15,7 @@ fi
 main() {
     select_release
 
-    log "↩️ Starting rollback..."
+    log "↩️ Starting rollback (Framework v$DEPLOY_VERSION)..."
 
     run_rollback_script
     activate_release

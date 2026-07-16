@@ -7,7 +7,6 @@ readonly RELEASE_NAME="${2:?Usage: ./deploy.sh <app-name> <release-name> <artifa
 readonly ARTIFACT_PATH="${3:?Usage: ./deploy.sh <app-name> <release-name> <artifact-path>}"
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 source "$SCRIPT_DIR/common.sh"
 source "$SCRIPT_DIR/config.sh"
 
@@ -18,7 +17,7 @@ fi
 readonly RELEASE_PATH="$RELEASES/$RELEASE_NAME"
 
 main() {
-    log "🚀 Starting deployment..."
+    log "🚀 Starting deployment (Framework v$DEPLOY_VERSION)..."
 
     ensure_artifact_exists
     ensure_app_dependencies

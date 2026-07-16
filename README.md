@@ -18,6 +18,8 @@ sudo ./setup.sh my-app
 
 # Populate shared/.env and shared/storage
 
+sudo ./permissions.sh my-app
+
 ./deploy.sh \
     my-app \
     20260713153015-a4c9d8e \
@@ -116,11 +118,11 @@ Edit `config.sh` to match your server environment.
 
 | Variable           | Description                                                                              | Default    |
 | ------------------ | ---------------------------------------------------------------------------------------- | ---------- |
-| `DEPLOY_VERSION`   | Deployment framework version.                                                            | `1.0.0`    |
-| `RELEASES_TO_KEEP` | Number of previous releases to retain after each deployment.                             | `5`        |
-| `PHP_VERSION`      | Minimum supported PHP version required by `setup.sh`.                                    | `8.2`      |
 | `APP_OWNER`        | Linux user that owns the application files and executes deployments.                     | `deploy`   |
 | `RUNTIME_USER`     | Linux user used by your web server to execute the application (for example, `www-data`). | `www-data` |
+| `RELEASES_TO_KEEP` | Number of previous releases to retain after each deployment.                             | `5`        |
+| `PHP_VERSION`      | Minimum supported PHP version required by `setup.sh`.                                    | `8.2`      |
+| `DEPLOY_VERSION`   | Deployment framework version.                                                            | `1.0.0`    |
 
 Application paths are derived automatically:
 
@@ -169,23 +171,46 @@ sudo ./setup.sh my-app
 
 This command:
 
-- Creates the application directory
-- Creates the release structure
-- Creates the shared directory
-- Creates an empty `.env`
-- Configures storage permissions
+- Creates the application directory.
+- Creates the release structure.
+- Creates the shared directory.
+- Creates an empty `.env`.
 
-Copy your production environment file.
+Populate the shared environment file with your production configuration:
 
 ```text
 /var/www/<app-name>/shared/.env
 ```
 
-Copy your persistent storage.
+Populate the shared storage directory with your application's persistent files:
 
 ```text
 /var/www/<app-name>/shared/storage
 ```
+
+### Repair and Verify Shared Resource Permissions
+
+After populating the shared resources, repair and verify their permissions before deploying the application.
+
+```bash
+sudo ./permissions.sh <app-name>
+```
+
+Example:
+
+```bash
+sudo ./permissions.sh my-app
+```
+
+This command:
+
+- Repairs ownership and permissions for `.env`.
+- Repairs ownership, permissions, and ACLs for `shared/storage`.
+- Verifies storage ACL inheritance.
+
+> **Note**
+>
+> This command is safe to run multiple times and is intended for use after populating or restoring shared resources.
 
 # Release Artifact
 
@@ -381,13 +406,14 @@ The workflow demonstrates how to:
 
 # Scripts
 
-| Script        | Description                               |
-| ------------- | ----------------------------------------- |
-| `setup.sh`    | Initializes an application on the server. |
-| `deploy.sh`   | Deploys a new application release.        |
-| `rollback.sh` | Activates a previous release.             |
-| `common.sh`   | Shared utility functions.                  |
-| `config.sh`   | Framework configuration.                  |
+| Script           | Description                                            |
+| ---------------- | ------------------------------------------------------ |
+| `setup.sh`       | Initializes an application on the server.              |
+| `permissions.sh` | Repairs and verifies permissions for shared resources. |
+| `deploy.sh`      | Deploys a new application release.                     |
+| `rollback.sh`    | Activates a previous release.                          |
+| `common.sh`      | Shared utility functions.                              |
+| `config.sh`      | Framework configuration.                               |
 
 # License
 

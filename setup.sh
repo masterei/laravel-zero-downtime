@@ -5,7 +5,6 @@ set -Eeuo pipefail
 readonly APP_NAME="${1:?Usage: ./setup.sh <app-name>}"
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 source "$SCRIPT_DIR/common.sh"
 source "$SCRIPT_DIR/config.sh"
 
