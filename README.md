@@ -259,18 +259,15 @@ Cleanup
 
 ## Rolling Back
 
-Rollback is interactive.
-
 ```bash
 ./rollback.sh <app-name>
 ```
 
 The script will:
 
-- List available releases
-- Prevent selecting the current release
-- Ask for confirmation
-- Atomically activate the selected release
+- List retained releases available for rollback
+- Prompt for confirmation
+- Atomically switch the active release
 
 ## Application Hooks
 
