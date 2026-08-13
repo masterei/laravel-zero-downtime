@@ -1,10 +1,14 @@
 # Laravel Zero-Downtime Deployment
 
-A lightweight deployment framework for Laravel applications running on a single VPS without Docker.
+A lightweight deployment framework for Laravel applications running on a single VPS, without requiring containerized application deployments.
 
 Applications are packaged as immutable release artifacts and deployed using atomic symlink switching for near zero-downtime deployments. An example GitHub Actions workflow is included.
 
+> **Status:** Production-tested and actively used.
+
 ## Quick Start
+
+Assuming the server already satisfies the requirements:
 
 ```bash
 git clone https://github.com/masterei/laravel-zero-downtime.git
@@ -30,7 +34,7 @@ sudo ./permissions.sh my-app
 
 - Atomic deployments using symlinks
 - Immutable release directories
-- Interactive rollback to any previous release
+- Interactive rollback to any retained previous release
 - Shared persistent resources (`.env` and `storage`)
 - Application-specific deployment hooks
 - Automatic cleanup of old releases
@@ -49,17 +53,7 @@ The framework is intentionally opinionated and emphasizes:
 - Minimal server dependencies
 - Application-specific deployment hooks
 
-# Prerequisites
-
-Before using the deployment framework, ensure that:
-
-- PHP CLI is installed.
-- Your web server is configured.
-- An application owner exists (for example, `deploy`).
-- The runtime user exists (for example, `www-data`).
-- SSH access to the server is configured.
-
-# Directory Structure
+## Directory Structure
 
 After running `setup.sh`, the application directory will look like this:
 
@@ -88,14 +82,18 @@ The deployment framework itself lives separately:
 └── setup.sh
 ```
 
-# Requirements
+## Requirements
 
-- Linux
+- Linux server
 - Bash 4+
 - PHP CLI
 - ACL utilities (`setfacl`, `getfacl`)
+- Configured web server
+- Application owner user
+- Runtime user
+- SSH access
 
-# Installation
+## Installation
 
 Clone the repository.
 
@@ -117,13 +115,11 @@ Edit `config.sh` to match your server environment.
 | ------------------ | ---------------------------------------------------------------------------------------- | ---------- |
 | `APP_OWNER`        | Linux user that owns the application files and executes deployments.                     | `deploy`   |
 | `RUNTIME_USER`     | Linux user used by your web server to execute the application (for example, `www-data`). | `www-data` |
-| `RELEASES_TO_KEEP` | Number of previous releases to retain after each deployment.                             | `5`        |
+| `RELEASES_TO_KEEP` | Number of recent releases to retain on the server.                                       | `5`        |
 
-> **Note**
->
-> `APP_NAME` is provided when running `setup.sh`, `permissions.sh`, `deploy.sh`, and `rollback.sh`. The framework derives all application paths automatically from this value.
+> **Note:** `APP_NAME` is provided when running `setup.sh`, `permissions.sh`, `deploy.sh`, and `rollback.sh`. The framework derives all application paths automatically from this value.
 
-# Initial Server Setup
+## Initial Server Setup
 
 Before running the setup script, edit `config.sh` to match your server environment.
 
@@ -131,7 +127,7 @@ Before running the setup script, edit `config.sh` to match your server environme
 APP_OWNER="deploy"
 ```
 
-> **Note**
+> **Note:**
 >
 > `APP_OWNER` is the Linux user that owns the application files and executes deployments.
 > This is **not** the web server runtime user (for example, `www-data`).
@@ -194,13 +190,17 @@ This command:
 - Repairs ownership, permissions, and ACLs for `shared/storage`.
 - Verifies storage ACL inheritance.
 
-> **Note**
->
-> This command is safe to run multiple times. It may be used after migrating or restoring shared resources, or whenever shared resource permissions need to be repaired.
+> **Note:** This command is safe to run multiple times. It may be used after migrating or restoring shared resources, or whenever shared resource permissions need to be repaired.
 
-# Release Artifact
+## Release Artifact
 
 The deployment artifact should contain the application ready for production.
+
+> **Note:**
+>
+> - The archive contents must be the application files themselves; do not wrap the application in an additional top-level directory.
+> - Shared resources such as `.env` and `storage` are managed separately by the deployment framework and are linked during deployment.
+> - The artifact must include Laravel's `bootstrap/cache` directory.
 
 Typical contents:
 
@@ -214,11 +214,7 @@ The artifact should not include environment-specific files such as:
 - `.env`
 - `storage/`
 
-> **Note**
->
-> Shared resources such as `.env` and `storage` are managed separately by the deployment framework and are linked during deployment.
-
-# Deploying a Release
+## Deploying a Release
 
 Deploy a release artifact.
 
@@ -235,7 +231,9 @@ Example:
     /tmp/my-app-20260713153015-a4c9d8e.tar.gz
 ```
 
-# Deployment Workflow
+> **Note:** The new release is activated only after extraction, shared resource linking, and the release hook complete successfully. If the deployment fails before activation, the current release remains active.
+
+## Deployment Workflow
 
 ```text
 CI/CD
@@ -259,7 +257,7 @@ Activate Release
 Cleanup
 ```
 
-# Rolling Back
+## Rolling Back
 
 Rollback is interactive.
 
@@ -274,13 +272,13 @@ The script will:
 - Ask for confirmation
 - Atomically activate the selected release
 
-# Application Hooks
+## Application Hooks
 
-> Each application can provide optional deployment scripts by creating a `.deploy` directory in the project root.
->
-> Both scripts are optional. If a script does not exist, it is skipped automatically.
->
-> Scripts are executed from the root of the extracted release.
+Each application can provide optional deployment scripts by creating a `.deploy` directory in the project root.
+
+Both scripts are optional. If a script does not exist, it is skipped automatically.
+
+Scripts are executed from the root of the extracted release.
 
 ```text
 my-app/
@@ -301,7 +299,7 @@ my-app/
 └── package.json
 ```
 
-## `.deploy/release.sh`
+### `.deploy/release.sh`
 
 Executed after shared resources are linked and before the release is activated.
 
@@ -318,7 +316,9 @@ php artisan storage:link
 php artisan queue:restart
 ```
 
-## `.deploy/rollback.sh`
+> Release hooks run before the new release is activated. Keep hooks safe to execute as part of a deployment and ensure database migrations are compatible with both the current and new application versions when zero-downtime behavior is required.
+
+### `.deploy/rollback.sh`
 
 Executed before the selected release is activated.
 
@@ -333,7 +333,7 @@ php artisan optimize
 php artisan queue:restart
 ```
 
-# CI/CD Integration
+## CI/CD Integration
 
 The reference workflow has been tested with **GitHub Actions**.
 
@@ -344,11 +344,9 @@ The framework is designed to work with CI/CD systems capable of:
 3. Uploading the artifact to the server.
 4. Executing `deploy.sh`.
 
-> **Note**
->
-> Although the deployment process is CI/CD independent by design, it has only been tested with GitHub Actions. Support for other CI/CD platforms has not yet been verified.
+Although the deployment process is CI/CD independent by design, it has only been tested with GitHub Actions. Support for other CI/CD platforms has not yet been verified.
 
-# GitHub Actions
+## GitHub Actions
 
 An example GitHub Actions workflow is provided in:
 
@@ -365,7 +363,7 @@ The workflow demonstrates how to:
 5. Upload the artifact to the server.
 6. Execute `deploy.sh`.
 
-## Required Secrets
+### Required Secrets
 
 | Secret               | Description                                     |
 | -------------------- | ----------------------------------------------- |
@@ -375,22 +373,13 @@ The workflow demonstrates how to:
 | `REMOTE_FINGERPRINT` | SSH host key fingerprint.                       |
 | `SSH_PASSPHRASE`     | Passphrase for the private key (if applicable). |
 
-## Required Environment Variables
+### Required Environment Variables
 
 | Variable   | Description                                        |
 | ---------- | -------------------------------------------------- |
 | `APP_NAME` | Application name used by the deployment framework. |
 
-> **Note**
->
-> The provided workflow is an example and has only been tested with GitHub Actions.
-> Other CI/CD systems may be used as long as they can:
->
-> - Build the application
-> - Upload the release artifact
-> - Execute `deploy.sh`
-
-# Scripts
+## Scripts
 
 | Script           | Description                                            |
 | ---------------- | ------------------------------------------------------ |
@@ -400,6 +389,12 @@ The workflow demonstrates how to:
 | `rollback.sh`    | Activates a previous release.                          |
 | `common.sh`      | Shared utility functions.                              |
 | `config.sh`      | Framework configuration.                               |
+
+# Author
+
+**Rei Junior**
+
+GitHub: [@masterei](https://github.com/masterei)
 
 # License
 
